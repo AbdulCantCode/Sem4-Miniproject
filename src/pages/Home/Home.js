@@ -7,8 +7,11 @@ export default function Home() {
 
   const handleTopicClick = (topic) => {
     if (topic === "Sorting Algorithms") {
-      // Open in new tab
+      // Open sorting visualizer in new tab
       window.open('/check.html', '_blank', 'noopener,noreferrer');
+    } else if (topic === "Shortest Path Algorithms") {
+      // Open pathfinding visualizer in new tab
+      window.open('/Shortest.html', '_blank', 'noopener,noreferrer');
     } else {
       // Normal navigation for other topics
       navigate(`/topic/${encodeURIComponent(topic)}`);
@@ -31,9 +34,6 @@ export default function Home() {
         </button>
         <button onClick={() => handleTopicClick("Shortest Path Algorithms")}>
           Shortest Path Algorithms
-        </button>
-        <button onClick={() => handleTopicClick("Stacks and Queues")}>
-          Stacks & Queues
         </button>
       </div>
     </div>

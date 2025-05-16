@@ -1,181 +1,852 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dino Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Algorithm Visualizer</title>
     <style>
+        :root {
+            --bg: #1a1a2e;
+            --card-bg: #16213e;
+            --primary: #0f3460;
+            --accent: #e94560;
+            --text: #f1f1f1;
+            --highlight: #4cc9f0;
+            --visited: #9d4edd;
+            --path: #4ade80;
+            --wall: #333533;
+        }
+        
         body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: #f7f7f7;
+            padding: 20px;
+            line-height: 1.6;
         }
-        #game {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
         }
-        #dino {
-            position: absolute;
-            bottom: 0;
-            left: 50px;
-            width: 60px;
-            height: 60px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="20" y="40" width="40" height="40" fill="%23222"/><rect x="30" y="30" width="20" height="10" fill="%23222"/><circle cx="40" cy="50" r="5" fill="%23fff"/><circle cx="50" cy="50" r="5" fill="%23fff"/></svg>');
-            background-repeat: no-repeat;
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--highlight);
+            font-size: 2.5rem;
+            grid-column: 1 / -1;
         }
-        #cactus {
-            position: absolute;
-            bottom: 0;
-            left: 100%;
-            width: 30px;
-            height: 60px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 60"><rect x="10" y="0" width="10" height="60" fill="%23222"/><rect x="0" y="10" width="30" height="10" fill="%23222"/></svg>');
-            background-repeat: no-repeat;
+        
+        .algorithm-options {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            grid-column: 1 / -1;
         }
-        #ground {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 20px;
-            background: #222;
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(145deg, var(--primary), #1a3a6e);
+            color: white;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3),
+                        -5px -5px 15px rgba(255, 255, 255, 0.05);
         }
-        #score {
-            position: absolute;
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn.primary {
+            background: linear-gradient(145deg, var(--accent), #ff2d55);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        #visualization {
+            height: 400px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+            gap: 2px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .bar {
+            flex: 1;
+            background: linear-gradient(to top, var(--highlight), #4cc9f0);
+            border-radius: 3px 3px 0 0;
+            transition: height 0.3s ease, background 0.2s;
+        }
+        
+        .bar.comparing {
+            background: var(--accent);
+        }
+        
+        .bar.sorted {
+            background: var(--path);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .info-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .info-card h2 {
+            color: var(--highlight);
+            margin-top: 0;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+        
+        .info-card h3 {
+            color: var(--accent);
+        }
+        
+        .pseudo-code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            margin: 15px 0;
+            border-left: 4px solid var(--highlight);
+        }
+        
+        .use-case {
+            background: rgba(15, 52, 96, 0.3);
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid var(--accent);
+        }
+        
+        .use-case strong {
+            color: var(--highlight);
+        }
+        
+        .study-timer {
+            position: fixed;
             top: 20px;
             right: 20px;
-            font-family: Arial, sans-serif;
-            font-size: 24px;
-            color: #222;
+            background: linear-gradient(145deg, var(--primary), #1a3a6e);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 100;
         }
-        #timer {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-family: Arial, sans-serif;
-            font-size: 24px;
-            color: #222;
+        
+        .critical {
+            color: #ff6b6b;
+            animation: pulse 1s infinite;
         }
+        
+        .home-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(145deg, #4cc9f0, #4895ef);
+            color: white;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+        
+        .home-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .home-btn:active {
+            transform: translateY(1px);
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 500px;
+  text-align: center;
+}
+
+.modal-timer {
+  font-size: 3rem;
+  font-weight: bold;
+  margin: 20px 0;
+  color: #4a6fa5;
+}
     </style>
 </head>
 <body>
-    <div id="game">
-        <div id="timer">05:00</div>
-        <div id="score">0</div>
-        <div id="dino"></div>
-        <div id="cactus"></div>
-        <div id="ground"></div>
+    <div class="study-timer">
+        Study Time: <span id="timer">25:00</span>
+    </div>
+
+
+
+<!-- Break Timer Modal (now the only modal) -->
+<div class="modal" id="breakTimerModal">
+  <div class="modal-content" style="background-color: #4011c0; color: #0b096e
+;">
+    <h2 style="color: #01e1ff;">Break Time 🌟</h2>
+    <div class="modal-timer" id="breakTimerDisplay" style="color: #01e1ff;">05:00</div>
+    <button class="control-btn" id="endBreakBtn" style="background: #01e1ff;">End Break Early</button>
+  </div>
+</div>
+
+<script>
+// Timer Variables
+let pomodoroStudyTimer = null;
+let pomodoroBreakTimer = null;
+let pomodoroTimeLeft = 0;
+const POMODORO_STUDY_DURATION = 25 * 60; // 25mins till break
+const POMODORO_BREAK_DURATION = 5 * 60; // 5 minutes
+
+// Initialize
+startPomodoroStudyTimer();
+
+// Study Timer Functions
+function startPomodoroStudyTimer() {
+  clearInterval(pomodoroStudyTimer);
+  pomodoroTimeLeft = POMODORO_STUDY_DURATION;
+  updatePomodoroTimerDisplay();
+  
+  pomodoroStudyTimer = setInterval(() => {
+    pomodoroTimeLeft--;
+    updatePomodoroTimerDisplay();
+    
+    if (pomodoroTimeLeft <= 0) {
+      clearInterval(pomodoroStudyTimer);
+      startPomodoroBreakTimer(); // Directly start break without popup
+    }
+  }, 1000);
+}
+
+// Break Timer Functions
+function startPomodoroBreakTimer() {
+  clearInterval(pomodoroBreakTimer);
+  let breakTimeLeft = POMODORO_BREAK_DURATION;
+  updateBreakTimerDisplay(breakTimeLeft);
+  showBreakTimerModal(); // Show the break timer modal
+  
+  pomodoroBreakTimer = setInterval(() => {
+    breakTimeLeft--;
+    updateBreakTimerDisplay(breakTimeLeft);
+    
+    if (breakTimeLeft <= 0) {
+      clearInterval(pomodoroBreakTimer);
+      hideBreakTimerModal();
+      startPomodoroStudyTimer();
+    }
+  }, 1000);
+}
+
+// Modal Control Functions
+function showBreakTimerModal() {
+  document.getElementById('breakTimerModal').style.display = 'flex';
+}
+
+function hideBreakTimerModal() {
+  document.getElementById('breakTimerModal').style.display = 'none';
+  clearInterval(pomodoroBreakTimer);
+}
+
+// Helper Functions
+function updatePomodoroTimerDisplay() {
+  const minutes = Math.floor(pomodoroTimeLeft / 60);
+  const seconds = pomodoroTimeLeft % 60;
+  document.getElementById('timer').textContent = 
+    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  
+  if (pomodoroTimeLeft <= 120) {
+    document.getElementById('timer').classList.add('critical');
+  } else {
+    document.getElementById('timer').classList.remove('critical');
+  }
+}
+
+function updateBreakTimerDisplay(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  document.getElementById('breakTimerDisplay').textContent = 
+    `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Event Listener
+document.getElementById('endBreakBtn').addEventListener('click', function() {
+  hideBreakTimerModal();
+  startPomodoroStudyTimer();
+});
+</script>
+    
+
+
+
+<!-- In your check.html file, modify the home button like this: -->
+<button class="home-btn" id="home-btn" onclick="window.close()">🏠 Home</button>
+    
+    <div class="container">
+        <h1>Sorting Algorithm Visualizer</h1>
+        
+        <div class="algorithm-options">
+
+            <button id="bubble-sort-btn" class="btn">Bubble Sort</button>
+            <button id="quick-sort-btn" class="btn">Quick Sort</button>
+            <button id="insertion-sort-btn" class="btn">Insertion Sort</button>
+            <button id="selection-sort-btn" class="btn">Selection Sort</button>
+            <button id="merge-sort-btn" class="btn">Merge Sort</button>
+        </div>
+        
+        <div>
+            <div id="visualization"></div>
+            <div class="controls">
+                <button id="randomize-btn" class="btn primary">🎲 Randomize Array</button>
+                <button id="visualize-btn" class="btn primary" disabled>▶️ Visualize</button>
+            </div>
+        </div>
+        
+        <div class="info-card" id="algorithm-info">
+            <h2>👋 Welcome!</h2>
+            <p>Select an algorithm to see how it works, its real-world uses, and visualize it step-by-step.</p>
+            <div class="use-case">
+                <strong>Tip:</strong> Click "Randomize" first, then pick an algorithm and hit "Visualize"!
+            </div>
+        </div>
     </div>
 
     <script>
-        // Game variables
-        const dino = document.getElementById('dino');
-        const cactus = document.getElementById('cactus');
-        const scoreDisplay = document.getElementById('score');
-        const timerDisplay = document.getElementById('timer');
-        let score = 0;
-        let isJumping = false;
-        let gameOver = false;
-        let gameSpeed = 5;
-        let gameInterval;
+        // DOM Elements
+        const randomizeBtn = document.getElementById("randomize-btn");
+        const visualizeBtn = document.getElementById("visualize-btn");
+        const bubbleSortBtn = document.getElementById("bubble-sort-btn");
+        const quickSortBtn = document.getElementById("quick-sort-btn");
+        const insertionSortBtn = document.getElementById("insertion-sort-btn");
+        const selectionSortBtn = document.getElementById("selection-sort-btn");
+        const mergeSortBtn = document.getElementById("merge-sort-btn");
+        const algorithmInfo = document.getElementById("algorithm-info");
+        const homeBtn = document.getElementById("home-btn");
+
+        // State
+        let array = [];
+        let selectedAlgorithm = null;
+        let isSorting = false;
+
+        // Timer functionality
+        let studyTimer;
+        const studyDuration = 25 * 60; // 25 minutes
+        let timeLeft = studyDuration;
         
-        // Timer variables
-        let gameTime = 5 * 60; // 5 minutes in seconds
-        let timerInterval;
-        
-        // Start game timer
-        startGameTimer();
-        
-        function startGameTimer() {
+        function startTimer() {
+            clearInterval(studyTimer);
+            timeLeft = studyDuration;
             updateTimerDisplay();
-            timerInterval = setInterval(() => {
-                gameTime--;
+            
+            studyTimer = setInterval(() => {
+                timeLeft--;
                 updateTimerDisplay();
                 
-                if (gameTime <= 0) {
-                    clearInterval(timerInterval);
-                    clearInterval(gameInterval);
-                    window.location.href = 'check.html';
+                if (timeLeft <= 0) {
+                    clearInterval(studyTimer);
+                    alert("Time's up! Take a break.");
+                }
+                
+                if (timeLeft <= 120) {
+                    document.getElementById('timer').classList.add('critical');
+                } else {
+                    document.getElementById('timer').classList.remove('critical');
                 }
             }, 1000);
         }
         
         function updateTimerDisplay() {
-            const minutes = Math.floor(gameTime / 60);
-            const seconds = gameTime % 60;
-            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Algorithm Data
+        const algorithmData = {
+            bubble: {
+                name: "Bubble Sort",
+                pseudoCode: `function bubbleSort(array) {
+    let n = array.length;
+    let swapped;
+    
+    do {
+        swapped = false;
+        for (let i = 1; i < n; i++) {
+            // Compare adjacent elements
+            if (array[i-1] > array[i]) {
+                // Swap them if in wrong order
+                [array[i-1], array[i]] = [array[i], array[i-1]];
+                swapped = true;
+            }
+        }
+        n--;
+    } while (swapped); // Repeat until no swaps
+}`,
+                description: "Bubble Sort works by repeatedly swapping adjacent elements if they're in the wrong order - like bubbles rising to the surface. It's simple but inefficient for large datasets.",
+                useCases: [
+                    "🛒 <strong>E-commerce price filters</strong>: When you have small product lists that are already nearly sorted",
+                    "🎮 <strong>Game leaderboards</strong>: For small player counts where simplicity matters more than speed"
+                ]
+            },
+            quick: {
+                name: "Quick Sort",
+                pseudoCode: `function quickSort(array, left, right) {
+    if (left < right) {
+        // Partition the array
+        const pivotIndex = partition(array, left, right);
+        
+        // Recursively sort sub-arrays
+        quickSort(array, left, pivotIndex - 1);
+        quickSort(array, pivotIndex + 1, right);
+    }
+}
+
+function partition(array, left, right) {
+    const pivot = array[right];
+    let i = left - 1;
+    
+    for (let j = left; j < right; j++) {
+        if (array[j] < pivot) {
+            i++;
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+    
+    [array[i+1], array[right]] = [array[right], array[i+1]];
+    return i + 1;
+}`,
+                description: "Quick Sort is a 'divide and conquer' algorithm that picks a 'pivot' element and partitions the array around it. It's extremely fast on average and used everywhere in real software.",
+                useCases: [
+                    "💻 <strong>Programming language built-ins</strong>: Python's sorted(), Java's Collections.sort()",
+                    "🔍 <strong>Database indexing</strong>: When you need to quickly sort large datasets"
+                ]
+            },
+            insertion: {
+                name: "Insertion Sort",
+                pseudoCode: `function insertionSort(array) {
+    for (let i = 1; i < array.length; i++) {
+        const key = array[i];
+        let j = i - 1;
+        
+        // Shift elements greater than key
+        while (j >= 0 && array[j] > key) {
+            array[j + 1] = array[j];
+            j--;
         }
         
-        // Game logic
-        function startGame() {
-            gameOver = false;
-            score = 0;
-            cactus.style.left = '100%';
-            
-            document.addEventListener('keydown', jump);
-            gameInterval = setInterval(updateGame, 20);
+        // Insert key in correct position
+        array[j + 1] = key;
+    }
+}`,
+                description: "Insertion Sort builds the final sorted array one item at a time, like sorting playing cards in your hands. It's efficient for small or nearly sorted data.",
+                useCases: [
+                    "📱 <strong>Mobile apps</strong>: When sorting small contact lists or messages",
+                    "📊 <strong>Live data streams</strong>: Adding new elements to already sorted data"
+                ]
+            },
+            selection: {
+                name: "Selection Sort",
+                pseudoCode: `function selectionSort(array) {
+    for (let i = 0; i < array.length; i++) {
+        // Find minimum in unsorted part
+        let minIndex = i;
+        for (let j = i + 1; j < array.length; j++) {
+            if (array[j] < array[minIndex]) {
+                minIndex = j;
+            }
         }
         
-        function updateGame() {
-            if (gameOver) return;
+        // Swap with current position
+        if (minIndex !== i) {
+            [array[i], array[minIndex]] = [array[minIndex], array[i]];
+        }
+    }
+}`,
+                description: "Selection Sort repeatedly finds the minimum element and puts it at the beginning. It's simple but inefficient - mainly used when memory writes are expensive.",
+                useCases: [
+                    "🔌 <strong>Embedded systems</strong>: Where memory is limited (like IoT devices)",
+                    "💾 <strong>Flash memory</strong>: When write operations are costly"
+                ]
+            },
+            merge: {
+                name: "Merge Sort",
+                pseudoCode: `function mergeSort(array) {
+    if (array.length <= 1) return array;
+    
+    const mid = Math.floor(array.length / 2);
+    const left = mergeSort(array.slice(0, mid));
+    const right = mergeSort(array.slice(mid));
+    
+    return merge(left, right);
+}
+
+function merge(left, right) {
+    let result = [];
+    let i = 0, j = 0;
+    
+    while (i < left.length && j < right.length) {
+        if (left[i] < right[j]) {
+            result.push(left[i]);
+            i++;
+        } else {
+            result.push(right[j]);
+            j++;
+        }
+    }
+    
+    return result.concat(left.slice(i)).concat(right.slice(j));
+}`,
+                description: "Merge Sort uses a divide-and-conquer approach to sort elements. It's stable and always has O(n log n) time complexity, making it reliable for large datasets.",
+                useCases: [
+                    "📁 <strong>External sorting</strong>: When data is too large for memory",
+                    "🔗 <strong>Linked lists</strong>: Efficient for sequential access data structures"
+                ]
+            }
+        };
+
+        // Initialize
+        randomizeArray();
+        startTimer();
+
+        // Event Listeners
+        randomizeBtn.addEventListener("click", randomizeArray);
+        visualizeBtn.addEventListener("click", visualizeSort);
+        homeBtn.addEventListener("click", () => {
+            window.location.href = "home.js"; // Change to your home page URL
+        });
+        
+        bubbleSortBtn.addEventListener("click", () => selectAlgorithm("bubble"));
+        quickSortBtn.addEventListener("click", () => selectAlgorithm("quick"));
+        insertionSortBtn.addEventListener("click", () => selectAlgorithm("insertion"));
+        selectionSortBtn.addEventListener("click", () => selectAlgorithm("selection"));
+        mergeSortBtn.addEventListener("click", () => selectAlgorithm("merge"));
+
+        // Functions
+        function randomizeArray() {
+            if (isSorting) return;
             
-            // Move cactus
-            let cactusLeft = parseInt(window.getComputedStyle(cactus).getPropertyValue('left'));
-            cactusLeft -= gameSpeed;
-            cactus.style.left = cactusLeft + 'px';
+            array = Array.from({ length: 20 }, () => Math.floor(Math.random() * 95) + 5);
+            renderBars();
+            visualizeBtn.disabled = !selectedAlgorithm;
+        }
+
+        function selectAlgorithm(algorithm) {
+            if (isSorting) return;
             
-            // Check collision
-            if (cactusLeft < 70 && cactusLeft > 0 && !isJumping) {
-                gameOver = true;
-                alert('Game Over! Score: ' + score);
-                resetGame();
+            selectedAlgorithm = algorithm;
+            visualizeBtn.disabled = false;
+            updateAlgorithmInfo();
+            
+            // Visual feedback
+            const buttons = [bubbleSortBtn, quickSortBtn, insertionSortBtn, selectionSortBtn, mergeSortBtn];
+            buttons.forEach(btn => btn.style.transform = "");
+            event.target.style.transform = "scale(0.95)";
+        }
+
+        function updateAlgorithmInfo() {
+            const data = algorithmData[selectedAlgorithm];
+            
+            let useCasesHTML = "";
+            data.useCases.forEach(useCase => {
+                useCasesHTML += `<div class="use-case">${useCase}</div>`;
+            });
+            
+            algorithmInfo.innerHTML = `
+                <h2>${data.name}</h2>
+                <p>${data.description}</p>
+                
+                <h3>📌 Real-World Uses</h3>
+                ${useCasesHTML}
+                
+                <h3>👨‍💻 How It Works</h3>
+                <div class="pseudo-code">${data.pseudoCode}</div>
+            `;
+        }
+
+        function renderBars(highlightIndices = [], sortedIndices = []) {
+            const visualization = document.getElementById("visualization");
+            visualization.innerHTML = "";
+            const maxBarHeight = Math.max(...array, 10);
+
+            array.forEach((value, i) => {
+                const bar = document.createElement("div");
+                bar.className = "bar";
+                bar.style.height = `${(value / maxBarHeight) * 100}%`;
+                
+                if (highlightIndices.includes(i)) {
+                    bar.classList.add("comparing");
+                }
+                if (sortedIndices.includes(i)) {
+                    bar.classList.add("sorted");
+                }
+                
+                visualization.appendChild(bar);
+            });
+        }
+
+        async function visualizeSort() {
+            if (isSorting || !selectedAlgorithm) return;
+            
+            isSorting = true;
+            disableButtons();
+            
+            switch(selectedAlgorithm) {
+                case "bubble": await bubbleSort(); break;
+                case "quick": await quickSort(); break;
+                case "insertion": await insertionSort(); break;
+                case "selection": await selectionSort(); break;
+                case "merge": await mergeSort(); break;
             }
             
-            // Reset cactus position
-            if (cactusLeft < -30) {
-                cactusLeft = window.innerWidth;
-                cactus.style.left = cactusLeft + 'px';
-                score++;
-                scoreDisplay.textContent = score;
+            isSorting = false;
+            enableButtons();
+            markArrayAsSorted();
+        }
+
+        function disableButtons() {
+            [randomizeBtn, visualizeBtn, bubbleSortBtn, quickSortBtn, insertionSortBtn, selectionSortBtn, mergeSortBtn]
+                .forEach(btn => btn.disabled = true);
+        }
+
+        function enableButtons() {
+            [randomizeBtn, bubbleSortBtn, quickSortBtn, insertionSortBtn, selectionSortBtn, mergeSortBtn]
+                .forEach(btn => btn.disabled = false);
+            visualizeBtn.disabled = false;
+        }
+
+        function markArrayAsSorted() {
+            renderBars([], array.map((_, i) => i));
+        }
+
+        // Sorting Algorithms with Visualization
+        async function bubbleSort() {
+            let n = array.length;
+            let swapped;
+            
+            do {
+                swapped = false;
+                for (let i = 1; i < n; i++) {
+                    // Highlight comparing bars
+                    renderBars([i-1, i]);
+                    await sleep(300);
+                    
+                    if (array[i-1] > array[i]) {
+                        [array[i-1], array[i]] = [array[i], array[i-1]];
+                        swapped = true;
+                        
+                        // Show swap
+                        renderBars([i-1, i]);
+                        await sleep(300);
+                    }
+                }
+                n--;
+            } while (swapped);
+        }
+
+        async function quickSort() {
+            async function _quickSort(start, end) {
+                if (start >= end) return;
                 
-                // Increase speed every 10 points
-                if (score % 10 === 0) {
-                    gameSpeed += 0.5;
+                const pivotIndex = await partition(start, end);
+                await _quickSort(start, pivotIndex - 1);
+                await _quickSort(pivotIndex + 1, end);
+            }
+            
+            async function partition(start, end) {
+                const pivot = array[end];
+                let i = start - 1;
+                
+                for (let j = start; j < end; j++) {
+                    renderBars([j, end]);
+                    await sleep(300);
+                    
+                    if (array[j] < pivot) {
+                        i++;
+                        [array[i], array[j]] = [array[j], array[i]];
+                        
+                        renderBars([i, j, end]);
+                        await sleep(300);
+                    }
+                }
+                
+                [array[i+1], array[end]] = [array[end], array[i+1]];
+                renderBars([i+1, end]);
+                await sleep(300);
+                
+                return i + 1;
+            }
+            
+            await _quickSort(0, array.length - 1);
+        }
+
+        async function insertionSort() {
+            for (let i = 1; i < array.length; i++) {
+                const key = array[i];
+                let j = i - 1;
+                
+                while (j >= 0 && array[j] > key) {
+                    renderBars([j, i]);
+                    await sleep(200);
+                    
+                    array[j + 1] = array[j];
+                    j--;
+                    
+                    renderBars([j + 1, i]);
+                    await sleep(200);
+                }
+                
+                array[j + 1] = key;
+                renderBars([j + 1, i]);
+                await sleep(300);
+            }
+        }
+
+        async function selectionSort() {
+            for (let i = 0; i < array.length - 1; i++) {
+                let minIndex = i;
+                
+                for (let j = i + 1; j < array.length; j++) {
+                    renderBars([minIndex, j]);
+                    await sleep(200);
+                    
+                    if (array[j] < array[minIndex]) {
+                        minIndex = j;
+                        renderBars([minIndex, j]);
+                        await sleep(200);
+                    }
+                }
+                
+                if (minIndex !== i) {
+                    [array[i], array[minIndex]] = [array[minIndex], array[i]];
+                    renderBars([i, minIndex]);
+                    await sleep(300);
                 }
             }
         }
-        
-        function jump(event) {
-            if (event.code === 'Space' && !isJumping && !gameOver) {
-                isJumping = true;
-                let jumpHeight = 0;
-                let jumpUp = true;
-                const jumpInterval = setInterval(() => {
-                    if (jumpUp) {
-                        jumpHeight += 5;
-                        if (jumpHeight >= 150) {
-                            jumpUp = false;
-                        }
-                    } else {
-                        jumpHeight -= 5;
-                        if (jumpHeight <= 0) {
-                            jumpHeight = 0;
-                            clearInterval(jumpInterval);
-                            isJumping = false;
-                        }
-                    }
-                    dino.style.bottom = jumpHeight + 'px';
-                }, 20);
+
+        async function mergeSort() {
+            async function _mergeSort(start, end) {
+                if (start >= end) return;
+                
+                const mid = Math.floor((start + end) / 2);
+                await _mergeSort(start, mid);
+                await _mergeSort(mid + 1, end);
+                await merge(start, mid, end);
             }
+            
+            async function merge(start, mid, end) {
+                const left = array.slice(start, mid + 1);
+                const right = array.slice(mid + 1, end + 1);
+                
+                let i = 0, j = 0, k = start;
+                
+                while (i < left.length && j < right.length) {
+                    renderBars([start + i, mid + 1 + j]);
+                    await sleep(300);
+                    
+                    if (left[i] <= right[j]) {
+                        array[k] = left[i];
+                        i++;
+                    } else {
+                        array[k] = right[j];
+                        j++;
+                    }
+                    renderBars([k]);
+                    await sleep(300);
+                    k++;
+                }
+                
+                while (i < left.length) {
+                    array[k] = left[i];
+                    renderBars([k]);
+                    await sleep(300);
+                    i++;
+                    k++;
+                }
+                
+                while (j < right.length) {
+                    array[k] = right[j];
+                    renderBars([k]);
+                    await sleep(300);
+                    j++;
+                    k++;
+                }
+            }
+            
+            await _mergeSort(0, array.length - 1);
         }
-        
-        function resetGame() {
-            clearInterval(gameInterval);
-            startGame();
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
-        
-        // Start the game
-        startGame();
     </script>
 </body>
 </html>
