@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Dino Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #f7f7f7;
+        }
+        #game {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        #dino {
+            position: absolute;
+            bottom: 0;
+            left: 50px;
+            width: 60px;
+            height: 60px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="20" y="40" width="40" height="40" fill="%23222"/><rect x="30" y="30" width="20" height="10" fill="%23222"/><circle cx="40" cy="50" r="5" fill="%23fff"/><circle cx="50" cy="50" r="5" fill="%23fff"/></svg>');
+            background-repeat: no-repeat;
+        }
+        #cactus {
+            position: absolute;
+            bottom: 0;
+            left: 100%;
+            width: 30px;
+            height: 60px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 60"><rect x="10" y="0" width="10" height="60" fill="%23222"/><rect x="0" y="10" width="30" height="10" fill="%23222"/></svg>');
+            background-repeat: no-repeat;
+        }
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20px;
+            background: #222;
+        }
+        #score {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            color: #222;
+        }
+        #timer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            color: #222;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <div id="timer">05:00</div>
+        <div id="score">0</div>
+        <div id="dino"></div>
+        <div id="cactus"></div>
+        <div id="ground"></div>
+    </div>
+
+    <script>
+        // Game variables
+        const dino = document.getElementById('dino');
+        const cactus = document.getElementById('cactus');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        let score = 0;
+        let isJumping = false;
+        let gameOver = false;
+        let gameSpeed = 5;
+        let gameInterval;
+        
+        // Timer variables
+        let gameTime = 5 * 60; // 5 minutes in seconds
+        let timerInterval;
+        
+        // Start game timer
+        startGameTimer();
+        
+        function startGameTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                gameTime--;
+                updateTimerDisplay();
+                
+                if (gameTime <= 0) {
+                    clearInterval(timerInterval);
+                    clearInterval(gameInterval);
+                    window.location.href = 'check.html';
+                }
+            }, 1000);
+        }
+        
+        function updateTimerDisplay() {
+            const minutes = Math.floor(gameTime / 60);
+            const seconds = gameTime % 60;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Game logic
+        function startGame() {
+            gameOver = false;
+            score = 0;
+            cactus.style.left = '100%';
+            
+            document.addEventListener('keydown', jump);
+            gameInterval = setInterval(updateGame, 20);
+        }
+        
+        function updateGame() {
+            if (gameOver) return;
+            
+            // Move cactus
+            let cactusLeft = parseInt(window.getComputedStyle(cactus).getPropertyValue('left'));
+            cactusLeft -= gameSpeed;
+            cactus.style.left = cactusLeft + 'px';
+            
+            // Check collision
+            if (cactusLeft < 70 && cactusLeft > 0 && !isJumping) {
+                gameOver = true;
+                alert('Game Over! Score: ' + score);
+                resetGame();
+            }
+            
+            // Reset cactus position
+            if (cactusLeft < -30) {
+                cactusLeft = window.innerWidth;
+                cactus.style.left = cactusLeft + 'px';
+                score++;
+                scoreDisplay.textContent = score;
+                
+                // Increase speed every 10 points
+                if (score % 10 === 0) {
+                    gameSpeed += 0.5;
+                }
+            }
+        }
+        
+        function jump(event) {
+            if (event.code === 'Space' && !isJumping && !gameOver) {
+                isJumping = true;
+                let jumpHeight = 0;
+                let jumpUp = true;
+                const jumpInterval = setInterval(() => {
+                    if (jumpUp) {
+                        jumpHeight += 5;
+                        if (jumpHeight >= 150) {
+                            jumpUp = false;
+                        }
+                    } else {
+                        jumpHeight -= 5;
+                        if (jumpHeight <= 0) {
+                            jumpHeight = 0;
+                            clearInterval(jumpInterval);
+                            isJumping = false;
+                        }
+                    }
+                    dino.style.bottom = jumpHeight + 'px';
+                }, 20);
+            }
+        }
+        
+        function resetGame() {
+            clearInterval(gameInterval);
+            startGame();
+        }
+        
+        // Start the game
+        startGame();
+    </script>
+</body>
+</html>

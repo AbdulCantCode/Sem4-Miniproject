@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Keep all your existing head content -->
+    <style>
+        /* Add this to your existing styles */
+        .btn.active {
+            background: linear-gradient(145deg, var(--accent), #ff2d55);
+            transform: scale(0.95);
+            box-shadow: 0 0 10px var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <h1>Sorting Algorithm Visualizer</h1>
+    
+    <div class="algorithm-options">
+        <!-- Buttons remain the same -->
+    </div>
+    
+    <div class="container">
+        <div>
+            <div id="visualization"></div>
+            <div class="controls">
+                <button id="randomize-btn" class="btn primary">🎲 Randomize Array</button>
+                <button id="visualize-btn" class="btn primary" disabled>▶️ Visualize</button>
+            </div>
+        </div>
+        
+        <div class="info-card" id="algorithm-info">
+            <!-- Removed welcome message -->
+            <h2 id="algorithm-name">Select an Algorithm</h2>
+            <p id="algorithm-desc">Choose a sorting algorithm to see its details</p>
+            
+            <h3>📌 Real-World Uses</h3>
+            <div id="algorithm-uses"></div>
+            
+            <h3>👨‍💻 How It Works</h3>
+            <div class="pseudo-code" id="algorithm-code">No algorithm selected</div>
+        </div>
+    </div>
+
+    <script>
+        // Update the selectAlgorithm function to highlight active button
+        function selectAlgorithm(algorithm) {
+            if (isSorting) return;
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.algorithm-options .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            selectedAlgorithm = algorithm;
+            visualizeBtn.disabled = false;
+            updateAlgorithmInfo();
+        }
+
+        // Update the updateAlgorithmInfo function
+        function updateAlgorithmInfo() {
+            if (!selectedAlgorithm) {
+                document.getElementById('algorithm-name').textContent = 'Select an Algorithm';
+                document.getElementById('algorithm-desc').textContent = 'Choose a sorting algorithm to see its details';
+                document.getElementById('algorithm-uses').innerHTML = '';
+                document.getElementById('algorithm-code').textContent = 'No algorithm selected';
+                return;
+            }
+            
+            const data = algorithmData[selectedAlgorithm];
+            document.getElementById('algorithm-name').textContent = data.name;
+            document.getElementById('algorithm-desc').textContent = data.description;
+            
+            let useCasesHTML = "";
+            data.useCases.forEach(useCase => {
+                useCasesHTML += `<div class="use-case">${useCase}</div>`;
+            });
+            document.getElementById('algorithm-uses').innerHTML = useCasesHTML;
+            document.getElementById('algorithm-code').textContent = data.pseudoCode;
+        }
+
+        // Rest of your script remains the same
+    </script>
+</body>
+</html>

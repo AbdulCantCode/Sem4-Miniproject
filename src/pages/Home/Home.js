@@ -6,7 +6,13 @@ export default function Home() {
   const navigate = useNavigate();
 
   const handleTopicClick = (topic) => {
-    navigate(`/topic/${encodeURIComponent(topic)}`);
+    if (topic === "Sorting Algorithms") {
+      // Open in new tab
+      window.open('/check.html', '_blank', 'noopener,noreferrer');
+    } else {
+      // Normal navigation for other topics
+      navigate(`/topic/${encodeURIComponent(topic)}`);
+    }
   };
 
   return (
